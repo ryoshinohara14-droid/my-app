@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>palette. — パーソナルカラー・骨格診断</title>
+<meta name="description" content="5つの質問に答えるだけで、AIがパーソナルカラー・骨格・似合うスタイルを無料診断します。"/>
+<meta name="theme-color" content="#8c6060"/>
+<meta property="og:title" content="palette. — パーソナルカラー・骨格診断"/>
+<meta property="og:description" content="5つの質問に答えるだけで、パーソナルカラー・骨格・似合うスタイルを無料診断。"/>
+<meta property="og:type" content="website"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%238c6060'/><circle cx='50' cy='50' r='20' fill='white' opacity='0.9'/></svg>"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Zen+Kaku+Gothic+New:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#e8e0d8;}
+body{font-family:'Zen Kaku Gothic New',sans-serif;color:#2d2420;display:flex;justify-content:center;align-items:flex-start;}
+:root{
+  --rose-l:#f5eeee;--rose-d:#8c6060;
+  --sage-l:#eef3f0;--warm:#f0e8e0;
+  --cream:#faf7f4;--ink:#2d2420;
+  --muted:#9a8880;--hint:#c8bbb5;
+}
+
+/* ── SHELL ── */
+.shell{width:100%;max-width:430px;min-height:100vh;background:#fff;box-shadow:0 0 60px rgba(80,40,20,0.12);position:relative;overflow:hidden;}
+
+/* ── SPLASH ── */
+.splash{
+  position:absolute;inset:0;background:var(--rose-d);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:100;transition:opacity 0.6s ease,transform 0.6s ease;
+}
+.splash.out{opacity:0;transform:scale(1.04);pointer-events:none;}
+.sp-ring{
+  width:80px;height:80px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,0.35);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:24px;
+  animation:fadeUp 0.7s ease 0.2s both;
+}
+.sp-title{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:#fff;letter-spacing:3px;animation:fadeUp 0.7s ease 0.4s both;}
+.sp-sub{font-size:11px;color:rgba(255,255,255,0.55);letter-spacing:4px;text-transform:uppercase;margin-top:6px;animation:fadeUp 0.7s ease 0.6s both;}
+.sp-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.4);margin-top:38px;animation:blink 1.1s ease-in-out 1.2s infinite,fadeUp 0.4s ease 1.0s both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+@keyframes blink{0%,100%{opacity:0.3;}50%{opacity:1;}}
+
+/* ── SCREENS ── */
+.screen{display:none;}.screen.active{display:block;}
+
+/* ── HOME ── */
+.home-header{padding:30px 24px 8px;}
+.htag{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--hint);margin-bottom:6px;}
+.htitle{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--ink);line-height:1.2;}
+.htitle em{font-style:italic;color:var(--rose-d);}
+.hint-text{padding:10px 24px 22px;font-size:12px;color:var(--muted);line-height:1.7;}
+.cards{display:flex;flex-direction:column;gap:10px;padding:0 24px 36px;}
+.card{border-radius:18px;padding:20px 22px;cursor:pointer;position:relative;overflow:hidden;transition:transform 0.18s;border:1px solid transparent;}
+.card:hover{transform:translateY(-2px);}.card:active{transform:scale(0.98);}
+.c1{background:var(--rose-l);border-color:rgba(196,160,160,0.3);}
+.c2{background:var(--sage-l);border-color:rgba(160,180,168,0.3);}
+.c3{background:var(--warm);border-color:rgba(224,200,180,0.25);}
+.cnum{position:absolute;top:14px;right:16px;font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;color:rgba(0,0,0,0.06);line-height:1;}
+.cicon{font-size:24px;margin-bottom:8px;display:block;}
+.clabel{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.ctitle{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--ink);margin-bottom:4px;}
+.cdesc{font-size:11px;color:var(--muted);line-height:1.6;}
+.carr{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--rose-d);margin-top:9px;display:block;}
+
+/* ── QUIZ NAV ── */
+.qnav{padding:15px 24px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f3ece8;}
+.qback{background:none;border:none;cursor:pointer;font-size:12px;color:var(--hint);font-family:'Zen Kaku Gothic New',sans-serif;padding:0;display:flex;align-items:center;gap:5px;transition:color 0.15s;}
+.qback:hover{color:var(--rose-d);}
+.qtitle{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--ink);}
+
+/* ── PROGRESS ── */
+.prog-wrap{padding:14px 24px 0;}
+.prog-bar{height:3px;background:#f0eae6;border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--rose-d);border-radius:3px;transition:width 0.4s ease;}
+.prog-txt{font-size:10px;color:var(--hint);margin-top:5px;letter-spacing:1px;}
+
+/* ── QUESTION ── */
+.q-wrap{padding:22px 24px 0;}
+.q-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--rose-d);margin-bottom:8px;}
+.q-text{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--ink);line-height:1.35;margin-bottom:22px;font-weight:300;white-space:pre-line;}
+
+/* ── CHOICES ── */
+.choices-col{display:flex;flex-direction:column;gap:9px;}
+.ch{display:flex;align-items:center;gap:13px;padding:13px 16px;border-radius:14px;border:1.5px solid #ede5e0;background:var(--cream);cursor:pointer;transition:all 0.15s;}
+.ch:hover{border-color:var(--rose-d);background:var(--rose-l);}
+.ch.on{border-color:var(--rose-d);background:var(--rose-l);}
+.ch-icon{font-size:20px;flex-shrink:0;width:28px;text-align:center;}
+.ch-txt{font-size:13px;color:var(--ink);line-height:1.35;}
+.ch-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+
+.choices-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.chg{border:1.5px solid #ede5e0;border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;background:var(--cream);transition:all 0.15s;}
+.chg:hover{border-color:var(--rose-d);background:var(--rose-l);}
+.chg.on{border-color:var(--rose-d);background:var(--rose-l);}
+.chg-icon{font-size:22px;margin-bottom:5px;}
+.chg-txt{font-size:11px;color:var(--ink);line-height:1.4;}
+
+.choices-colors{display:flex;gap:10px;flex-wrap:wrap;padding:4px 0;}
+.chc{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:transform 0.15s;}
+.chc:hover{transform:scale(1.07);}
+.chc.on .swatch-ring{outline:3px solid var(--rose-d);outline-offset:2px;}
+.swatch-ring{width:46px;height:46px;border-radius:50%;border:2px solid rgba(0,0,0,0.08);transition:outline 0.15s;}
+.chc-lbl{font-size:9px;color:var(--muted);text-align:center;white-space:nowrap;}
+
+.q-btn{
+  display:block;width:calc(100% - 48px);margin:22px 24px 28px;
+  background:var(--rose-d);color:#fff;border:none;border-radius:13px;
+  padding:15px;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;
+  cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:opacity 0.2s;
+}
+.q-btn:disabled{opacity:0.32;cursor:default;}
+.q-btn:hover:not(:disabled){opacity:0.88;}
+
+/* ── LOADING ── */
+.loading-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 24px;}
+.lring{width:50px;height:50px;border-radius:50%;border:2px solid var(--rose-l);border-top-color:var(--rose-d);animation:spin 1s linear infinite;margin-bottom:20px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ltxt{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--ink);font-style:italic;margin-bottom:6px;}
+.lsub{font-size:11px;color:var(--hint);letter-spacing:2px;text-transform:uppercase;}
+.lmsg{font-size:12px;color:var(--muted);margin-top:20px;text-align:center;line-height:1.7;max-width:240px;opacity:0;transition:opacity 0.5s;}
+.lmsg.show{opacity:1;}
+
+/* ── RESULT ── */
+.rhero{padding:28px 24px 24px;position:relative;overflow:hidden;}
+.rhero::before{content:'';position:absolute;top:-50px;right:-50px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,0.1);}
+.rlabel{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:8px;}
+.rtype{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;color:#fff;line-height:1.1;margin-bottom:6px;}
+.rtype em{font-style:italic;}
+.rbadge{display:inline-block;background:rgba(255,255,255,0.2);color:#fff;border-radius:20px;padding:5px 15px;font-size:11px;letter-spacing:1.5px;}
+.rbody{padding:20px 24px;}
+.rsec{margin-bottom:22px;}
+.rslabel{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--hint);margin-bottom:8px;}
+.rstitle{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ink);margin-bottom:7px;}
+.rtext{font-size:13px;color:var(--muted);line-height:1.8;}
+.palette{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;}
+.pi{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.psw{width:42px;height:42px;border-radius:50%;border:2px solid rgba(0,0,0,0.07);}
+.pn{font-size:9px;color:var(--muted);text-align:center;white-space:nowrap;}
+.slist{display:flex;flex-direction:column;gap:8px;}
+.si{display:flex;align-items:flex-start;gap:12px;background:var(--cream);border-radius:13px;padding:13px 14px;}
+.snum{width:22px;height:22px;border-radius:50%;background:var(--rose-l);color:var(--rose-d);font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.stitle{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:3px;}
+.stext{font-size:12px;color:var(--muted);line-height:1.6;}
+.ract{display:flex;gap:10px;padding:8px 0 36px;border-top:1px solid #f3ece8;margin-top:8px;}
+.btn-retry{flex:1;background:none;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;color:var(--hint);padding:13px 0;transition:color 0.15s;}
+.btn-retry:hover{color:var(--muted);}
+.btn-top{flex:1.2;background:var(--rose-d);color:#fff;border:none;border-radius:30px;padding:13px;font-size:13px;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:opacity 0.15s;}
+.btn-top:hover{opacity:0.85;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SPLASH -->
+  <div class="splash" id="splash">
+    <div class="sp-ring">
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+        <circle cx="17" cy="17" r="11" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/>
+        <circle cx="17" cy="17" r="4.5" fill="rgba(255,255,255,0.85)"/>
+        <path d="M17 6 Q21 12 17 17 Q13 22 17 28" stroke="rgba(255,255,255,0.4)" stroke-width="0.8" fill="none"/>
+      </svg>
+    </div>
+    <div class="sp-title">palette.</div>
+    <div class="sp-sub">personal color diagnosis</div>
+    <div class="sp-dot"></div>
+  </div>
+
+  <!-- HOME -->
+  <div class="screen active" id="s-home">
+    <div class="home-header">
+      <div class="htag">personal color diagnosis · free</div>
+      <div class="htitle">あなたの<em>似合う色</em>を<br>見つけよう</div>
+    </div>
+    <div class="hint-text">5つの質問に答えるだけで、パーソナルカラー・骨格・似合うスタイルを診断します。登録不要・完全無料。</div>
+    <div class="cards">
+      <div class="card c1" onclick="startQuiz('color')">
+        <span class="cnum">01</span><span class="cicon">🎨</span>
+        <div class="clabel">personal color</div>
+        <div class="ctitle">パーソナルカラー診断</div>
+        <div class="cdesc">イエベ春・ブルベ夏・イエベ秋・ブルベ冬のどれか診断します。</div>
+        <span class="carr">診断する →</span>
+      </div>
+      <div class="card c2" onclick="startQuiz('body')">
+        <span class="cnum">02</span><span class="cicon">✨</span>
+        <div class="clabel">body type</div>
+        <div class="ctitle">骨格診断</div>
+        <div class="cdesc">ストレート・ウェーブ・ナチュラルのどれか診断します。</div>
+        <span class="carr">診断する →</span>
+      </div>
+      <div class="card c3" onclick="startQuiz('outfit')">
+        <span class="cnum">03</span><span class="cicon">👗</span>
+        <div class="clabel">style suggestion</div>
+        <div class="ctitle">服装提案</div>
+        <div class="cdesc">好みや雰囲気からあなたに合うスタイルを3パターン提案します。</div>
+        <span class="carr">診断する →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="screen" id="s-quiz">
+    <div class="qnav">
+      <button class="qback" onclick="goHome()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
+        トップ
+      </button>
+      <div class="qtitle" id="qtitle"></div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="prog-txt" id="prog-txt">質問 1 / 5</div>
+    </div>
+    <div class="q-wrap">
+      <div class="q-label" id="q-label"></div>
+      <div class="q-text" id="q-text"></div>
+      <div id="q-choices"></div>
+    </div>
+    <button class="q-btn" id="q-btn" disabled onclick="nextQ()">次へ</button>
+  </div>
+
+  <!-- LOADING -->
+  <div class="screen" id="s-loading">
+    <div class="loading-wrap">
+      <div class="lring"></div>
+      <div class="ltxt">診断中...</div>
+      <div class="lsub">結果を生成しています</div>
+      <div class="lmsg" id="l-msg"></div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="s-result">
+    <div class="rhero" id="rh">
+      <div class="rlabel" id="rl"></div>
+      <div class="rtype" id="rt"></div>
+      <div class="rbadge" id="rb"></div>
+    </div>
+    <div class="rbody" id="rbody"></div>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+// ── QUIZ DATA ──
+const QUIZZES = {
+  color: {
+    title: 'パーソナルカラー',
+    qs: [
+      { label:'Q1 · 肌について', text:'手のひらを見たとき、\nどちらに近いですか？', type:'col',
+        choices:[
+          {icon:'🟡',txt:'黄みがかったオレンジ色',sub:'温かみのある色味',score:{sp:2,au:2,su:0,wi:0}},
+          {icon:'🩷',txt:'ピンクや赤みがある',sub:'ほんのり赤い色味',score:{sp:0,au:0,su:2,wi:2}},
+          {icon:'🤍',txt:'白っぽく青みを感じる',sub:'クールな色味',score:{sp:0,au:0,su:1,wi:2}},
+          {icon:'🟫',txt:'どちらとも言えない',sub:'中間的な色味',score:{sp:1,au:1,su:1,wi:1}},
+        ]
+      },
+      { label:'Q2 · 瞳の色', text:'明るい場所で見た\n瞳の色は？', type:'colors',
+        colors:[
+          {c:'#9a7040',lbl:'明るい茶',score:{sp:3,au:1,su:0,wi:0}},
+          {c:'#5a3820',lbl:'茶色',score:{sp:1,au:3,su:0,wi:0}},
+          {c:'#281808',lbl:'黒に近い茶',score:{sp:0,au:0,su:2,wi:1}},
+          {c:'#080808',lbl:'黒',score:{sp:0,au:0,su:1,wi:3}},
+        ]
+      },
+      { label:'Q3 · 日焼け', text:'日焼けするとどうなりますか？', type:'col',
+        choices:[
+          {icon:'🌞',txt:'すぐ焼けて蜂蜜色になる',sub:'黄みがかった褐色',score:{sp:2,au:2,su:0,wi:0}},
+          {icon:'🌤',txt:'少し赤くなってから焼ける',sub:'赤みを帯びた褐色',score:{sp:1,au:1,su:1,wi:1}},
+          {icon:'🌸',txt:'赤くなってなかなか焼けない',sub:'赤みが残りやすい',score:{sp:0,au:0,su:2,wi:1}},
+          {icon:'❄️',txt:'ほとんど焼けない',sub:'もともと色白',score:{sp:1,au:0,su:1,wi:2}},
+        ]
+      },
+      { label:'Q4 · アクセサリー', text:'どちらのアクセサリーが\nしっくりきますか？', type:'grid',
+        items:[
+          {icon:'🥇',txt:'ゴールドが\n好き・似合う',score:{sp:2,au:2,su:0,wi:0}},
+          {icon:'🥈',txt:'シルバーが\n好き・似合う',score:{sp:0,au:0,su:2,wi:2}},
+          {icon:'✨',txt:'どちらも\n好き',score:{sp:1,au:1,su:1,wi:1}},
+          {icon:'💭',txt:'あまり\nつけない',score:{sp:1,au:1,su:1,wi:1}},
+        ]
+      },
+      { label:'Q5 · 雰囲気', text:'自分の第一印象として\n当てはまるのは？', type:'col',
+        choices:[
+          {icon:'🌸',txt:'明るく華やか、フレッシュ',sub:'春っぽい雰囲気',score:{sp:3,au:0,su:0,wi:0}},
+          {icon:'🌿',txt:'上品で落ち着いた、エレガント',sub:'夏っぽい雰囲気',score:{sp:0,au:0,su:3,wi:0}},
+          {icon:'🍂',txt:'大人っぽく深みがある',sub:'秋っぽい雰囲気',score:{sp:0,au:3,su:0,wi:0}},
+          {icon:'❄️',txt:'クール・シャープ・個性的',sub:'冬っぽい雰囲気',score:{sp:0,au:0,su:0,wi:3}},
+        ]
+      },
+    ],
+    compute(scores){
+      const top=Object.entries(scores).sort((a,b)=>b[1]-a[1])[0][0];
+      return colorResult(top);
+    }
+  },
+
+  body: {
+    title: '骨格診断',
+    qs: [
+      { label:'Q1 · 鎖骨', text:'鎖骨はどんな感じですか？', type:'col',
+        choices:[
+          {icon:'💎',txt:'あまり目立たない',sub:'鎖骨が埋まっている感じ',score:{st:2,wa:1,na:0}},
+          {icon:'🔍',txt:'細くはっきり見える',sub:'繊細で華奢な鎖骨',score:{st:0,wa:2,na:1}},
+          {icon:'💪',txt:'しっかり大きく張っている',sub:'骨格がはっきりしている',score:{st:1,wa:0,na:2}},
+        ]
+      },
+      { label:'Q2 · 手・指', text:'手の関節や指は\nどんな印象ですか？', type:'col',
+        choices:[
+          {icon:'🤝',txt:'関節が目立たずふっくら',sub:'丸みのある柔らかな印象',score:{st:2,wa:1,na:0}},
+          {icon:'💅',txt:'細く繊細でしなやか',sub:'関節が細く華奢',score:{st:0,wa:2,na:1}},
+          {icon:'✋',txt:'関節がはっきり・骨ばっている',sub:'大きめで骨感がある',score:{st:1,wa:0,na:2}},
+        ]
+      },
+      { label:'Q3 · 肌質', text:'肌質はどちらに近いですか？', type:'col',
+        choices:[
+          {icon:'✨',txt:'ハリと弾力がある',sub:'筋肉質・肉感的な印象',score:{st:2,wa:0,na:1}},
+          {icon:'🌸',txt:'柔らかくふわっとしている',sub:'やわらかい触感',score:{st:0,wa:2,na:1}},
+          {icon:'🌿',txt:'乾燥しやすく薄い',sub:'さらっとした質感',score:{st:1,wa:1,na:2}},
+        ]
+      },
+      { label:'Q4 · 体のシルエット', text:'体全体のシルエットは？', type:'grid',
+        items:[
+          {icon:'⏳',txt:'ウエストが\nくびれている',score:{st:1,wa:2,na:0}},
+          {icon:'🔺',txt:'上半身が\nがっしり',score:{st:2,wa:0,na:1}},
+          {icon:'📏',txt:'全体的に\nストレート',score:{st:2,wa:0,na:1}},
+          {icon:'🦴',txt:'骨や関節が\n目立つ',score:{st:0,wa:0,na:2}},
+        ]
+      },
+      { label:'Q5 · 服で困ること', text:'洋服を選ぶとき\n困ることは？', type:'col',
+        choices:[
+          {icon:'👕',txt:'首まわりや胸元がきつくなりやすい',sub:'上半身に厚みがある',score:{st:2,wa:0,na:0}},
+          {icon:'👗',txt:'ウエストが大きくすっきり見えない',sub:'ラインが出にくい',score:{st:0,wa:2,na:0}},
+          {icon:'🧥',txt:'肩がずれたりサイズが合いにくい',sub:'骨格が大きめ',score:{st:0,wa:0,na:2}},
+          {icon:'😊',txt:'特に困らない',sub:'',score:{st:1,wa:1,na:1}},
+        ]
+      },
+    ],
+    compute(scores){
+      const top=Object.entries(scores).sort((a,b)=>b[1]-a[1])[0][0];
+      return bodyResult(top);
+    }
+  },
+
+  outfit: {
+    title: '服装提案',
+    qs: [
+      { label:'Q1 · シーン', text:'一番よく着る服はどんな場面向けですか？', type:'grid',
+        items:[
+          {icon:'💼',txt:'仕事・\nオフィス',score:{mode:2,casu:0,femi:0,natu:0}},
+          {icon:'🛍',txt:'お出かけ・\nデート',score:{mode:0,casu:1,femi:2,natu:0}},
+          {icon:'🏠',txt:'休日・\nカジュアル',score:{mode:0,casu:2,femi:0,natu:1}},
+          {icon:'🌿',txt:'なんでも\nOK',score:{mode:0,casu:1,femi:0,natu:2}},
+        ]
+      },
+      { label:'Q2 · 好きな色', text:'好きな色のトーンはどれですか？', type:'colors',
+        colors:[
+          {c:'#e8d5c0',lbl:'ベージュ系',score:{mode:0,casu:1,femi:1,natu:2}},
+          {c:'#b0b8c0',lbl:'グレー系',score:{mode:2,casu:0,femi:0,natu:0}},
+          {c:'#282828',lbl:'ダーク系',score:{mode:2,casu:1,femi:0,natu:0}},
+          {c:'#e8a8b8',lbl:'ピンク系',score:{mode:0,casu:0,femi:2,natu:1}},
+          {c:'#a0c898',lbl:'グリーン系',score:{mode:0,casu:1,femi:0,natu:2}},
+          {c:'#9ab0d0',lbl:'ブルー系',score:{mode:1,casu:1,femi:1,natu:0}},
+        ]
+      },
+      { label:'Q3 · こだわり', text:'ファッションで大事にしていることは？', type:'col',
+        choices:[
+          {icon:'✨',txt:'きれい・上品・エレガント',sub:'女性らしさを大切に',score:{mode:1,casu:0,femi:2,natu:0}},
+          {icon:'😌',txt:'楽・シンプル・動きやすい',sub:'機能性を重視',score:{mode:0,casu:2,femi:0,natu:1}},
+          {icon:'🔥',txt:'おしゃれ・個性的・目立つ',sub:'トレンドを意識',score:{mode:2,casu:0,femi:1,natu:0}},
+          {icon:'🌿',txt:'ナチュラル・素材感を重視',sub:'こだわりの素材が好き',score:{mode:0,casu:1,femi:0,natu:2}},
+        ]
+      },
+      { label:'Q4 · 憧れ', text:'憧れるスタイルのイメージは？', type:'grid',
+        items:[
+          {icon:'🇫🇷',txt:'フレンチ\nシック',score:{mode:1,casu:0,femi:2,natu:0}},
+          {icon:'🇰🇷',txt:'韓国系\nトレンド',score:{mode:2,casu:1,femi:1,natu:0}},
+          {icon:'🌿',txt:'ナチュラル\nアース',score:{mode:0,casu:1,femi:0,natu:2}},
+          {icon:'🖤',txt:'モード・\nエレガント',score:{mode:2,casu:0,femi:1,natu:0}},
+        ]
+      },
+      { label:'Q5 · ボトムス', text:'ボトムスはどれが\n一番好きですか？', type:'col',
+        choices:[
+          {icon:'👖',txt:'デニム・パンツ派',sub:'カジュアル・クール寄り',score:{mode:1,casu:2,femi:0,natu:1}},
+          {icon:'👗',txt:'スカート・ワンピース派',sub:'フェミニン・エレガント寄り',score:{mode:0,casu:0,femi:2,natu:1}},
+          {icon:'🎽',txt:'シーンで使い分ける',sub:'バランス型',score:{mode:1,casu:1,femi:1,natu:1}},
+        ]
+      },
+    ],
+    compute(scores){
+      const top=Object.entries(scores).sort((a,b)=>b[1]-a[1])[0][0];
+      return outfitResult(top);
+    }
+  }
+};
+
+// ── RESULT DATA ──
+function colorResult(t){
+  const D={
+    sp:{label:'パーソナルカラー診断結果',bg:'#c49a6a',type:'Spring<br><em>イエベ春</em>',badge:'イエローベース・ブライト',
+      overview:'明るく透明感のある色が似合うタイプ。肌に黄みと透明感があり、ツヤ肌が特徴。フレッシュで可愛らしく、パッと華やかな印象を持っています。',
+      pl:[{c:'#FF9A8B',n:'コーラル'},{c:'#FFD060',n:'イエロー'},{c:'#90EE90',n:'黄緑'},{c:'#87CEEB',n:'スカイ'},{c:'#FFB6C1',n:'ピーチ'}],
+      avoid:'青みの強いパステル・暗いネイビー・くすみカラーは顔がくすんで見えることがあります。',
+      sugs:[{t:'アクセサリー',d:'ゴールド・コーラル・パールなど軽やかな素材が◎。細いデザインが特に似合います。'},{t:'メイク',d:'コーラルピンク・ピーチ系リップが顔色を明るくしてくれます。チークも同系色で。'},{t:'ファッション',d:'アイボリー・ライトベージュ・コーラルなど明るく透明感のある色を中心に。'}]},
+    su:{label:'パーソナルカラー診断結果',bg:'#7a9aaf',type:'Summer<br><em>ブルベ夏</em>',badge:'ブルーベース・ソフト',
+      overview:'柔らかくくすんだ青みのある色が似合うタイプ。肌に青みがあり、マット肌が特徴。上品で知的、エレガントな雰囲気を持っています。',
+      pl:[{c:'#C8A8D0',n:'ラベンダー'},{c:'#E8A0B0',n:'ローズ'},{c:'#8AAABF',n:'スチールブルー'},{c:'#C0C8E0',n:'ライラック'},{c:'#98C8C8',n:'ミント'}],
+      avoid:'オレンジ・イエロー・ブラックなど強い色や黄みの強い色は顔がきつく見えることがあります。',
+      sugs:[{t:'アクセサリー',d:'シルバー・プラチナ・パールが得意。繊細なデザインのものがよく映えます。'},{t:'メイク',d:'ローズ・ベリー系リップ。モーブやグレーパープル系のアイシャドウで上品に。'},{t:'ファッション',d:'くすみローズ・ラベンダー・グレイッシュブルーなどソフトな色が最適です。'}]},
+    au:{label:'パーソナルカラー診断結果',bg:'#9a6840',type:'Autumn<br><em>イエベ秋</em>',badge:'イエローベース・ディープ',
+      overview:'深みのある温かみのある色が似合うタイプ。肌に黄みがありマットな質感が特徴。大人っぽく落ち着いた、洗練された雰囲気を持っています。',
+      pl:[{c:'#8B4513',n:'テラコッタ'},{c:'#CD853F',n:'キャメル'},{c:'#556B2F',n:'オリーブ'},{c:'#8B6914',n:'マスタード'},{c:'#704214',n:'チョコレート'}],
+      avoid:'パステルカラー・明るいピンク・ネオンカラーなど鮮やかすぎる色や青みの強い色は顔がくすんで見えます。',
+      sugs:[{t:'アクセサリー',d:'ゴールド系・マット素材・木・革素材が得意。存在感のあるデザインが◎。'},{t:'メイク',d:'テラコッタ・ブラウン系リップがとても映えます。アイシャドウはアースカラーで。'},{t:'ファッション',d:'ブラウン・カーキ・テラコッタなどアースカラーのコーデが最も輝きます。'}]},
+    wi:{label:'パーソナルカラー診断結果',bg:'#5060a0',type:'Winter<br><em>ブルベ冬</em>',badge:'ブルーベース・ヴィヴィッド',
+      overview:'鮮やかでコントラストのある色が似合うタイプ。肌に青みと透明感があり、クールでシャープな雰囲気。モノトーンや原色が圧倒的に似合います。',
+      pl:[{c:'#000080',n:'ネイビー'},{c:'#DC143C',n:'トゥルーレッド'},{c:'#F0F0F2',n:'ホワイト'},{c:'#1a1a1a',n:'ブラック'},{c:'#8B008B',n:'パープル'}],
+      avoid:'アイボリー・ベージュ・マスタードなどくすんだ温かみのある色は顔色がぼけて見えることがあります。',
+      sugs:[{t:'アクセサリー',d:'シルバー・プラチナ・クリスタルが得意。シンプルでシャープなデザインが◎。'},{t:'メイク',d:'ビビッドレッド・ワインレッド・ベリー系リップが最も映えます。アイラインをしっかり引くと◎。'},{t:'ファッション',d:'ブラック・ホワイト・ビビッドな原色系がよく似合います。モノトーンコーデが特に得意。'}]},
+  };
+  return D[t]||D.au;
+}
+function bodyResult(t){
+  const D={
+    st:{label:'骨格診断結果',bg:'#9a7860',type:'Straight<br><em>ストレート</em>',badge:'筋肉・立体感タイプ',
+      overview:'筋肉のハリと立体感があり、メリハリのあるボディラインが特徴。シンプルで上質な素材のIラインシルエットが最も似合います。',
+      sil:'タイトなIラインシルエットが得意。ウエストマークしたスタイルも◎。ふんわりとしたギャザーやフリルは苦手で、シンプルなデザインが映えます。',
+      sugs:[{t:'トップス',d:'シンプルなVネック・ボートネック・タートルネックが得意。素材は上質なものを選ぶと◎。'},{t:'ボトムス',d:'タイトスカート・スラックス・ストレートデニムが似合います。ウエストマークを意識して。'},{t:'アウター',d:'テーラードジャケット・シンプルなロングコートが得意。装飾が少ないすっきりしたデザインを。'}]},
+    wa:{label:'骨格診断結果',bg:'#a09060',type:'Wave<br><em>ウェーブ</em>',badge:'柔らかさ・曲線タイプ',
+      overview:'柔らかい曲線的なボディラインが特徴。華奢で女性らしいシルエットを持ちます。フェミニンで可愛らしいスタイルが最もよく映えます。',
+      sil:'ウエストマークしたAラインやフレアシルエットが得意。ハイウエストで脚長効果を狙うのが◎。ビッグシルエットや厚みのある素材は苦手です。',
+      sugs:[{t:'トップス',d:'フリル・ギャザー・ドレープなど柔らかいデザインが得意。フィット感のあるものが◎。'},{t:'ボトムス',d:'フレアスカート・ハイウエストミニ・プリーツスカートが最もきれいに見えます。'},{t:'アウター',d:'ショート丈のコート・ボレロ・細めのベルト付きコートでウエストを強調するのが◎。'}]},
+    na:{label:'骨格診断結果',bg:'#7a9a8a',type:'Natural<br><em>ナチュラル</em>',badge:'骨感・筋感タイプ',
+      overview:'骨格がしっかりしており、手足が長めでモデル体型に多いタイプ。素材感のある服やゆったりとしたシルエットが最もよく映えます。',
+      sil:'ゆったりオーバーサイズ・ローウエスト・レイヤードスタイルが得意。カジュアル〜ストリート系と相性が良く、厚みのある素材も着こなせます。',
+      sugs:[{t:'トップス',d:'リネン・デニム・ざっくりニットなど素材感あるものが◎。ボックスシルエットが似合います。'},{t:'ボトムス',d:'ワイドパンツ・バギーデニム・マキシスカートが得意。自然なウエスト位置が◎。'},{t:'アウター',d:'ビッグシルエットコート・ライダースジャケット・ダッフルコートがおすすめ。'}]},
+  };
+  return D[t]||D.na;
+}
+function outfitResult(t){
+  const D={
+    mode:{label:'服装提案結果',bg:'#707090',badge:'モードシック',
+      analysis:'クールでスタイリッシュなスタイルが好みと分析。シャープなシルエットと洗練されたカラーパレットが魅力です。',
+      sugs:[{t:'モノトーンコーデ',d:'白・黒・グレーのモノトーンにワンアクセントを加えるスタイル。シルエットにこだわると一気に上品に。'},{t:'韓国系トレンド',d:'クロップドトップス×ハイウエストボトムスの今っぽいスタイル。レイヤードで奥行きを出して。'},{t:'エディトリアルスタイル',d:'個性的なアイテムを1点取り入れたアクセントのあるコーデ。シンプルな着こなしに映えます。'}]},
+    casu:{label:'服装提案結果',bg:'#8a8070',badge:'カジュアルシック',
+      analysis:'リラックスしたカジュアルスタイルが好みと分析。デニム・スニーカーを中心に動きやすさを大切にしています。',
+      sugs:[{t:'アメカジMIX',d:'デニム×ホワイトシャツ×スニーカーの定番アメカジ。素材の質感にこだわるとぐっと垢抜けます。'},{t:'スポーツMIX',d:'スウェット×ジョガーパンツにきれいめアイテムを1つ加えてバランスよく仕上げて。'},{t:'クリーンカジュアル',d:'ホワイトT×ベージュワイドパンツ×ローファーの潔いコーデ。シンプルが最強。'}]},
+    femi:{label:'服装提案結果',bg:'#b07880',badge:'フェミニンロマンス',
+      analysis:'柔らかくフェミニンなスタイルが好みと分析。花柄・フリル・レースなど女性らしい要素が似合います。',
+      sugs:[{t:'フレンチガーリー',d:'花柄ワンピース×バレエフラットの定番フレンチスタイル。繊細なアクセサリーで仕上げて。'},{t:'ロマンティックフェミニン',d:'シフォン素材・フリルブラウスなど柔らかい素材感のコーデがおすすめ。上品にまとめて◎。'},{t:'スウィートカジュアル',d:'パステルカラー×ふんわりスカートで甘さとカジュアルを融合。スニーカーでバランスを。'}]},
+    natu:{label:'服装提案結果',bg:'#7a9070',badge:'ナチュラルアース',
+      analysis:'自然体でリラックスしたアースカラースタイルが好みと分析。素材感を大切にしたナチュラルなコーデが似合います。',
+      sugs:[{t:'アースカラーコーデ',d:'ベージュ・テラコッタ・ブラウンを組み合わせたナチュラルな配色。リネン素材が特に◎。'},{t:'ボヘミアンナチュラル',d:'民族柄・フリンジ・マキシ丈スカートなどボヘミアンエッセンスを取り入れて。'},{t:'北欧ナチュラル',d:'シンプルなシルエットにテクスチャーある素材を合わせて。グリーン系を差し色に使うと今っぽく。'}]},
+  };
+  return D[t]||D.casu;
+}
+
+// ── STATE ──
+let mode='color', qIdx=0, sel=null, scores={};
+
+function goHome(){show('s-home');qIdx=0;sel=null;scores={};}
+
+function startQuiz(m){
+  mode=m; qIdx=0; sel=null;
+  const keys=m==='color'?['sp','au','su','wi']:m==='body'?['st','wa','na']:['mode','casu','femi','natu'];
+  scores=Object.fromEntries(keys.map(k=>[k,0]));
+  document.getElementById('qtitle').textContent=QUIZZES[m].title;
+  renderQ();
+  show('s-quiz');
+}
+
+function renderQ(){
+  const quiz=QUIZZES[mode];
+  const q=quiz.qs[qIdx];
+  const total=quiz.qs.length;
+  sel=null;
+  document.getElementById('q-label').textContent=q.label;
+  document.getElementById('q-text').textContent=q.text;
+  document.getElementById('prog-fill').style.width=`${(qIdx/total)*100}%`;
+  document.getElementById('prog-txt').textContent=`質問 ${qIdx+1} / ${total}`;
+  document.getElementById('q-btn').disabled=true;
+  document.getElementById('q-btn').textContent=qIdx===total-1?'診断結果を見る':'次へ';
+  const container=document.getElementById('q-choices');
+  container.innerHTML='';
+  if(q.type==='col'){
+    const div=document.createElement('div');div.className='choices-col';
+    q.choices.forEach(c=>{
+      const el=document.createElement('div');el.className='ch';
+      el.innerHTML=`<div class="ch-icon">${c.icon}</div><div><div class="ch-txt">${c.txt}</div>${c.sub?`<div class="ch-sub">${c.sub}</div>`:''}</div>`;
+      el.onclick=()=>{container.querySelectorAll('.ch').forEach(x=>x.classList.remove('on'));el.classList.add('on');sel=c.score;document.getElementById('q-btn').disabled=false;};
+      div.appendChild(el);
+    });
+    container.appendChild(div);
+  } else if(q.type==='grid'){
+    const div=document.createElement('div');div.className='choices-grid';
+    q.items.forEach(item=>{
+      const el=document.createElement('div');el.className='chg';
+      el.innerHTML=`<div class="chg-icon">${item.icon}</div><div class="chg-txt">${item.txt.replace('\n','<br>')}</div>`;
+      el.onclick=()=>{container.querySelectorAll('.chg').forEach(x=>x.classList.remove('on'));el.classList.add('on');sel=item.score;document.getElementById('q-btn').disabled=false;};
+      div.appendChild(el);
+    });
+    container.appendChild(div);
+  } else if(q.type==='colors'){
+    const div=document.createElement('div');div.className='choices-colors';
+    q.colors.forEach(c=>{
+      const el=document.createElement('div');el.className='chc';
+      el.innerHTML=`<div class="swatch-ring" style="background:${c.c}"></div><div class="chc-lbl">${c.lbl}</div>`;
+      el.onclick=()=>{container.querySelectorAll('.chc').forEach(x=>x.classList.remove('on'));el.classList.add('on');sel=c.score;document.getElementById('q-btn').disabled=false;};
+      div.appendChild(el);
+    });
+    container.appendChild(div);
+  }
+}
+
+function nextQ(){
+  if(!sel)return;
+  Object.entries(sel).forEach(([k,v])=>{if(scores[k]!==undefined)scores[k]+=v;});
+  const total=QUIZZES[mode].qs.length;
+  if(qIdx<total-1){qIdx++;renderQ();}
+  else{showResult();}
+}
+
+function showResult(){
+  show('s-loading');
+  const msgs=[
+    '5つの回答を組み合わせて分析中...',
+    'あなたの特徴を丁寧に診断中...',
+    'もうすぐ結果が出ます ✨'
+  ];
+  let mi=0;
+  const msgEl=document.getElementById('l-msg');
+  const iv=setInterval(()=>{
+    msgEl.textContent=msgs[mi%msgs.length];
+    msgEl.classList.add('show');
+    mi++;
+  },1800);
+  setTimeout(()=>{
+    clearInterval(iv);
+    const result=QUIZZES[mode].compute(scores);
+    renderResult(result);
+    show('s-result');
+  },3400);
+}
+
+function renderResult(d){
+  document.getElementById('rh').style.background=d.bg;
+  document.getElementById('rl').textContent=d.label;
+  document.getElementById('rt').innerHTML=d.type;
+  document.getElementById('rb').textContent=d.badge;
+  let h='';
+  if(d.overview)h+=sec('your type',d.type.replace(/<[^>]*>/g,'').trim(),d.overview);
+  if(d.pl){
+    h+=`<div class="rsec"><div class="rslabel">best colors</div><div class="rstitle">似合う色</div><div class="palette">`;
+    d.pl.forEach(p=>h+=`<div class="pi"><div class="psw" style="background:${p.c}"></div><div class="pn">${p.n}</div></div>`);
+    h+=`</div></div>`;
+  }
+  if(d.avoid)h+=sec('avoid','避けたい色',d.avoid);
+  if(d.sil)h+=sec('best silhouette','似合うシルエット',d.sil);
+  if(d.analysis)h+=sec('analysis','スタイル分析',d.analysis);
+  if(d.sugs){
+    h+=`<div class="rsec"><div class="rslabel">suggestion</div><div class="rstitle">スタイリングアドバイス</div><div class="slist">`;
+    d.sugs.forEach((s,i)=>h+=`<div class="si"><div class="snum">${i+1}</div><div><div class="stitle">${s.t}</div><div class="stext">${s.d}</div></div></div>`);
+    h+=`</div></div>`;
+  }
+  h+=`<div class="ract"><button class="btn-retry" onclick="startQuiz('${mode}')">← もう一度</button><button class="btn-top" onclick="goHome()">トップへ</button></div>`;
+  document.getElementById('rbody').innerHTML=h;
+}
+function sec(lb,ti,tx){return`<div class="rsec"><div class="rslabel">${lb}</div><div class="rstitle">${ti}</div><div class="rtext">${tx}</div></div>`;}
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+// SPLASH
+setTimeout(()=>{
+  document.getElementById('splash').classList.add('out');
+  setTimeout(()=>document.getElementById('splash').style.display='none',650);
+},2400);
+</script>
+</body>
+</html>
