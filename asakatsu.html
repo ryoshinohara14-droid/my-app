@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="description" content="朝活専用SNS — 毎朝5〜9時のタイムライン、スポットマップ、コミュニティ">
+<meta name="theme-color" content="#0A1628">
+<title>ASAKATSU — 朝活SNS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#F7FBFF;--white:#FFFFFF;
+  --cyan:#00C2E0;--cyan-soft:#E0F7FB;--cyan-mid:#A8E6EF;--cyan-dark:#0099B5;
+  --ink:#0A1628;--ink2:#4A5F7A;--ink3:#94A8BF;
+  --border:#E2EEF5;--border2:#C8DFF0;
+  --r:16px;--r2:10px;
+}
+html,body{height:100%;background:#CBD5E1;}
+body{font-family:'Inter',sans-serif;color:var(--ink);display:flex;align-items:flex-start;justify-content:center;padding:24px 0 40px;min-height:100vh;}
+@media(max-width:480px){body{padding:0;background:var(--white);align-items:flex-start;}}
+
+.phone-shell{width:375px;flex-shrink:0;background:#1A1A2E;border-radius:44px;padding:12px;box-shadow:0 32px 80px rgba(0,0,0,0.35),inset 0 0 0 1px rgba(255,255,255,0.08);position:relative;}
+@media(max-width:480px){.phone-shell{width:100%;border-radius:0;padding:0;background:transparent;box-shadow:none;}}
+.phone-notch{width:110px;height:28px;background:#1A1A2E;border-radius:0 0 18px 18px;position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:100;display:flex;align-items:center;justify-content:center;gap:6px;}
+@media(max-width:480px){.phone-notch{display:none;}}
+.notch-cam{width:10px;height:10px;border-radius:50%;background:#0D0D1A;}
+.notch-bar{width:44px;height:4px;border-radius:2px;background:#0D0D1A;}
+.phone-screen{width:100%;height:720px;border-radius:34px;overflow:hidden;background:var(--bg);position:relative;display:flex;flex-direction:column;}
+@media(max-width:480px){.phone-screen{height:100svh;border-radius:0;}}
+
+.status-bar{background:var(--white);padding:10px 20px 6px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.sb-time{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--ink);}
+.sb-icons{display:flex;align-items:center;gap:5px;}
+.battery{width:20px;height:10px;border:1.5px solid var(--ink);border-radius:2px;position:relative;display:flex;align-items:center;padding:1px;}
+.battery::after{content:'';position:absolute;right:-4px;top:50%;transform:translateY(-50%);width:2px;height:5px;background:var(--ink);border-radius:0 1px 1px 0;}
+.bat-fill{height:100%;width:70%;background:var(--ink);border-radius:1px;}
+.sb-wifi{font-size:11px;color:var(--ink);font-weight:500;}
+
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;}
+.scroll-area::-webkit-scrollbar{display:none;}
+
+.header{background:var(--white);padding:10px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.h-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.logo{display:flex;align-items:center;gap:6px;}
+.logo-sq{width:26px;height:26px;background:var(--ink);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.logo-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-0.5px;}
+.h-time{font-size:11px;color:var(--ink3);}
+.h-cards{display:flex;gap:7px;}
+.h-card{flex:1;background:var(--cyan-soft);border-radius:9px;padding:8px 10px;}
+.h-card.dark{background:var(--ink);}
+.hc-label{font-size:9px;color:var(--ink3);font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;}
+.hc-label.w{color:rgba(255,255,255,0.45);}
+.hc-val{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--ink);}
+.hc-val.w{color:#fff;}
+.hc-sub{font-size:9px;color:var(--cyan-dark);margin-top:1px;font-weight:500;}
+.hc-sub.w{color:var(--cyan-mid);}
+.win-tag{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 9px;border-radius:20px;font-size:10px;font-weight:600;}
+.win-tag.open{background:#E6FBF0;color:#0A7A40;}
+.win-tag.closed{background:#FEF2F2;color:#C13333;}
+.win-dot{width:5px;height:5px;border-radius:50%;}
+.win-dot.open{background:#0A7A40;}
+.win-dot.closed{background:#C13333;}
+
+.stories{display:flex;gap:10px;padding:10px 14px;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
+.stories::-webkit-scrollbar{display:none;}
+.story{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;}
+.s-ring{width:44px;height:44px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:17px;background:var(--cyan-soft);transition:transform .15s;}
+.s-ring.you{border:2px solid var(--cyan);}
+.s-ring:hover{transform:scale(1.05);}
+.s-days{font-family:'Space Grotesk',sans-serif;font-size:8px;font-weight:600;background:var(--cyan);color:#fff;padding:1px 4px;border-radius:5px;}
+.s-name{font-size:9px;color:var(--ink3);font-weight:500;}
+
+.nav{display:flex;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
+.nav::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:10px 11px;font-size:11px;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;user-select:none;}
+.tab.on{color:var(--cyan-dark);border-bottom-color:var(--cyan);}
+
+.feed{padding:10px 12px;display:flex;flex-direction:column;gap:9px;}
+.time-banner{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--cyan-soft);border-radius:var(--r2);border:1px solid var(--cyan-mid);}
+.tb-icon{width:24px;height:24px;background:var(--cyan);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;color:#fff;}
+.tb-text{font-size:11px;font-weight:500;color:var(--cyan-dark);}
+.tb-sub{font-size:9px;color:var(--ink3);margin-top:1px;}
+.tb-cd{margin-left:auto;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:var(--cyan-dark);flex-shrink:0;}
+
+.compose{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:12px;}
+.compose-top{display:flex;gap:8px;}
+.c-av{width:30px;height:30px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.c-ta{width:100%;border:none;outline:none;resize:none;font-family:'Inter',sans-serif;font-size:12px;color:var(--ink);background:transparent;min-height:30px;line-height:1.5;}
+.c-ta::placeholder{color:var(--ink3);}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;}
+.chip{font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px;border:1px solid var(--border2);color:var(--ink2);cursor:pointer;transition:all .15s;background:var(--white);user-select:none;}
+.chip:hover,.chip.sel{background:var(--cyan);color:#fff;border-color:var(--cyan);}
+.c-row{display:flex;align-items:center;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+.c-mini{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:10px;color:var(--ink2);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;}
+.c-mini:hover{border-color:var(--cyan);color:var(--cyan-dark);}
+.c-submit{margin-left:auto;background:var(--ink);color:#fff;border:none;border-radius:7px;padding:5px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:opacity .15s;}
+.c-submit:hover{opacity:.8;}
+
+.filter-row{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding:1px 0;}
+.filter-row::-webkit-scrollbar{display:none;}
+.fr-chip{flex-shrink:0;font-size:10px;font-weight:500;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--ink2);cursor:pointer;background:var(--white);transition:all .15s;user-select:none;}
+.fr-chip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+.post{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:12px;animation:up .22s ease;}
+@keyframes up{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.p-h{display:flex;gap:8px;align-items:center;margin-bottom:7px;}
+.p-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:var(--cyan-soft);}
+.p-name{font-size:12px;font-weight:600;color:var(--ink);}
+.p-time{font-size:10px;color:var(--ink3);margin-top:1px;}
+.p-badge{margin-left:auto;font-family:'Space Grotesk',sans-serif;font-size:9px;font-weight:700;background:var(--cyan-soft);color:var(--cyan-dark);padding:2px 7px;border-radius:5px;}
+.p-body{font-size:12px;line-height:1.55;color:var(--ink);margin-bottom:8px;}
+.p-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;}
+.ptag{font-size:9px;font-weight:500;padding:2px 7px;border-radius:5px;background:var(--cyan-soft);color:var(--cyan-dark);}
+.ptag.dark{background:#F1F4F8;color:var(--ink2);}
+.p-actions{display:flex;border-top:1px solid var(--border);padding-top:7px;}
+.p-act{flex:1;display:flex;align-items:center;justify-content:center;gap:3px;font-size:10px;font-weight:500;color:var(--ink3);cursor:pointer;padding:3px;border-radius:5px;transition:all .15s;border:none;background:none;font-family:'Inter',sans-serif;}
+.p-act:hover{background:var(--cyan-soft);color:var(--cyan-dark);}
+.p-act.liked{color:#E24B4A;}
+
+.map-wrap{padding:12px;}
+.s-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+.map-frame{background:var(--cyan-soft);border:1px solid var(--cyan-mid);border-radius:var(--r);height:150px;position:relative;overflow:hidden;margin-bottom:10px;}
+.map-svg{position:absolute;inset:0;width:100%;height:100%;opacity:.25;}
+.mpin{position:absolute;cursor:pointer;font-size:14px;transition:transform .15s;}
+.mpin:hover{transform:scale(1.2);}
+.map-label{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.92);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:9px;font-weight:500;color:var(--ink2);white-space:nowrap;}
+.place{background:var(--white);border-radius:var(--r2);border:1px solid var(--border);padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:7px;cursor:pointer;transition:all .15s;}
+.place:hover{border-color:var(--cyan);}
+.pl-ico{width:34px;height:34px;background:var(--cyan-soft);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.pl-name{font-size:12px;font-weight:600;color:var(--ink);}
+.pl-desc{font-size:10px;color:var(--ink3);margin-top:1px;}
+.pl-r{text-align:right;flex-shrink:0;}
+.pl-stars{font-size:10px;color:#F59E0B;font-weight:600;}
+.pl-crowd{font-size:9px;margin-top:2px;font-weight:500;}
+.crowd-ok{color:#0A7A40;}
+.crowd-mid{color:#B45309;}
+.add-pl{width:100%;padding:9px;border:1.5px dashed var(--cyan-mid);border-radius:var(--r2);background:none;font-family:'Inter',sans-serif;font-size:11px;font-weight:500;color:var(--cyan-dark);cursor:pointer;transition:all .15s;}
+.add-pl:hover{background:var(--cyan-soft);}
+
+.tips-wrap{padding:12px;display:flex;flex-direction:column;gap:8px;}
+.tip{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:12px;cursor:pointer;border-left:3px solid var(--cyan);}
+.tip-tag{display:inline-block;font-size:9px;font-weight:600;background:var(--cyan-soft);color:var(--cyan-dark);padding:2px 7px;border-radius:5px;margin-bottom:6px;}
+.tip-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;margin-bottom:5px;}
+.tip-body{font-size:11px;color:var(--ink2);line-height:1.6;}
+.tip-foot{display:flex;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+.tip-by{font-size:10px;color:var(--ink3);}
+.tip-save{margin-left:auto;font-size:10px;color:var(--cyan-dark);font-weight:600;}
+
+.comm-wrap{padding:12px;display:flex;flex-direction:column;gap:9px;}
+.ch-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:12px;}
+.ch-h{display:flex;align-items:flex-start;gap:9px;margin-bottom:10px;}
+.ch-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.ch-ico.a{background:var(--ink);}
+.ch-ico.b{background:var(--cyan-soft);}
+.ch-ico.c{background:#EAF7EE;}
+.ch-title{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;color:var(--ink);}
+.ch-sub{font-size:10px;color:var(--ink3);margin-top:1px;}
+.ch-join{margin-left:auto;background:var(--white);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;flex-shrink:0;}
+.ch-join.in{background:var(--ink);color:#fff;border-color:var(--ink);}
+.pbar{height:3px;background:var(--cyan-soft);border-radius:3px;overflow:hidden;margin-bottom:7px;}
+.pfill{height:100%;background:var(--cyan);border-radius:3px;}
+.ch-stats{display:flex;gap:10px;}
+.ch-st{font-size:10px;color:var(--ink3);}
+.ch-st b{color:var(--ink);font-weight:600;}
+.lb{background:var(--white);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;}
+.lb-row{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--border);}
+.lb-row:last-child{border-bottom:none;}
+.lb-row.me{background:var(--cyan-soft);}
+.lb-n{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:var(--ink3);width:14px;}
+.lb-av{width:26px;height:26px;border-radius:50%;background:var(--cyan-soft);display:flex;align-items:center;justify-content:center;font-size:11px;}
+.lb-name{flex:1;font-size:12px;font-weight:500;}
+.lb-streak{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:var(--cyan-dark);}
+
+.mylog-wrap{padding:12px;display:flex;flex-direction:column;gap:9px;}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}
+.sc{background:var(--white);border:1px solid var(--border);border-radius:var(--r2);padding:10px;text-align:center;}
+.sc-num{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--ink);}
+.sc-label{font-size:9px;color:var(--ink3);margin-top:2px;line-height:1.4;}
+.week-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:12px;}
+.week-bars{display:flex;gap:4px;align-items:flex-end;height:60px;margin-top:10px;}
+.wcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.wbar{width:100%;border-radius:3px 3px 0 0;background:var(--cyan-soft);}
+.wbar.done{background:var(--cyan);}
+.wbar.today{background:var(--ink);}
+.wday{font-size:9px;color:var(--ink3);font-weight:500;}
+.summary-card{background:var(--ink);border-radius:var(--r);padding:14px;}
+.sm-label{font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;}
+.sm-main{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;margin-bottom:12px;color:#fff;}
+.sm-rows{display:flex;flex-direction:column;gap:7px;}
+.sm-row{display:flex;justify-content:space-between;font-size:11px;}
+.sm-k{color:rgba(255,255,255,0.5);}
+.sm-v{font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--cyan-mid);}
+.sm-divider{height:1px;background:rgba(255,255,255,0.07);margin:1px 0;}
+
+.mypage{display:flex;flex-direction:column;}
+.mp-hero{background:var(--white);padding:16px 16px 0;border-bottom:1px solid var(--border);}
+.mp-avatar-row{display:flex;align-items:flex-end;gap:12px;margin-bottom:10px;}
+.mp-avatar{width:62px;height:62px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;box-shadow:0 0 0 2px var(--white),0 0 0 3.5px var(--cyan);}
+.mp-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--ink);}
+.mp-handle{font-size:11px;color:var(--ink3);}
+.mp-edit{background:var(--white);border:1px solid var(--border2);border-radius:7px;padding:5px 12px;font-size:11px;font-weight:500;color:var(--ink2);cursor:pointer;font-family:'Inter',sans-serif;align-self:flex-start;margin-left:auto;}
+.mp-bio{font-size:12px;color:var(--ink2);line-height:1.5;margin-bottom:10px;}
+.mp-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.badge{display:flex;align-items:center;gap:3px;background:var(--cyan-soft);border:1px solid var(--cyan-mid);border-radius:20px;padding:3px 8px;font-size:10px;font-weight:600;color:var(--cyan-dark);}
+.badge.dark{background:var(--ink);border-color:var(--ink);color:#fff;}
+.mp-stats-row{display:flex;border-top:1px solid var(--border);}
+.mp-stat{flex:1;padding:10px 0;text-align:center;cursor:pointer;}
+.mp-stat:not(:last-child){border-right:1px solid var(--border);}
+.mp-stat-num{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--ink);}
+.mp-stat-label{font-size:9px;color:var(--ink3);margin-top:1px;font-weight:500;}
+.mp-section{padding:12px 14px;}
+.mp-section-title{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;color:var(--ink);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;}
+.mp-section-more{font-size:10px;color:var(--cyan-dark);font-weight:500;cursor:pointer;}
+.streak-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-day{aspect-ratio:1;border-radius:3px;background:var(--cyan-soft);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--ink3);font-weight:500;}
+.cal-day.done{background:var(--cyan);color:#fff;}
+.cal-day.today{background:var(--ink);color:#fff;}
+.cal-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px;}
+.cal-lbl{font-size:8px;color:var(--ink3);font-weight:500;text-align:center;}
+.activity-list{display:flex;flex-direction:column;gap:7px;}
+.act-row{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--white);border:1px solid var(--border);border-radius:var(--r2);cursor:pointer;}
+.act-ico{width:30px;height:30px;background:var(--cyan-soft);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.act-title{font-size:12px;font-weight:500;color:var(--ink);}
+.act-time{font-size:10px;color:var(--ink3);margin-top:1px;}
+.act-right{text-align:right;margin-left:auto;}
+.act-likes{font-size:10px;color:var(--ink3);}
+.act-badge{font-size:9px;font-weight:600;background:var(--cyan-soft);color:var(--cyan-dark);padding:2px 6px;border-radius:5px;margin-top:2px;}
+.mp-achievements{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;}
+.ach{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 5px;background:var(--white);border:1px solid var(--border);border-radius:var(--r2);cursor:pointer;}
+.ach-ico{font-size:20px;}
+.ach-label{font-size:8px;color:var(--ink3);font-weight:500;text-align:center;line-height:1.3;}
+.ach.locked{opacity:.3;}
+.mp-settings{display:flex;flex-direction:column;background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.setting-row{display:flex;align-items:center;gap:9px;padding:11px 13px;border-bottom:1px solid var(--border);cursor:pointer;}
+.setting-row:last-child{border-bottom:none;}
+.set-icon{font-size:14px;width:16px;text-align:center;}
+.set-label{flex:1;font-size:12px;font-weight:500;color:var(--ink);}
+.set-arrow{font-size:10px;color:var(--ink3);}
+.set-val{font-size:11px;color:var(--ink3);margin-right:3px;}
+.toggle{width:30px;height:16px;background:var(--cyan);border-radius:8px;position:relative;cursor:pointer;flex-shrink:0;}
+.toggle::after{content:'';position:absolute;width:12px;height:12px;background:#fff;border-radius:50%;top:2px;right:2px;transition:right .2s;}
+.toggle.off{background:var(--border2);}
+.toggle.off::after{right:16px;}
+
+.bnav{background:var(--white);border-top:1px solid var(--border);display:flex;padding:6px 0 10px;flex-shrink:0;}
+.bbt{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:3px 2px;border:none;background:none;font-family:'Inter',sans-serif;}
+.b-ico{font-size:16px;}
+.b-lbl{font-size:9px;color:var(--ink3);font-weight:500;}
+.bbt.on .b-lbl{color:var(--cyan-dark);}
+.fab{width:40px;height:40px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;margin-top:-14px;transition:transform .15s;flex-shrink:0;}
+.fab:hover{transform:scale(1.06);}
+</style>
+</head>
+<body>
+<div class="phone-shell">
+  <div class="phone-notch"><div class="notch-cam"></div><div class="notch-bar"></div></div>
+  <div class="phone-screen">
+    <div class="status-bar">
+      <div class="sb-time" id="sbTime">--:--</div>
+      <div class="sb-icons"><span class="sb-wifi">WiFi</span><div class="battery"><div class="bat-fill"></div></div></div>
+    </div>
+    <div class="header">
+      <div class="h-top">
+        <div class="logo">
+          <div class="logo-sq"><svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="3.5" fill="#00C2E0"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <span class="logo-name">ASAKATSU</span>
+        </div>
+        <div class="h-time" id="htime">--:--</div>
+      </div>
+      <div class="h-cards">
+        <div class="h-card"><div class="hc-label">ストリーク</div><div class="hc-val">14 <span style="font-size:11px;font-weight:500;color:var(--ink2);">日</span></div><div class="hc-sub">フレンド内 2位</div></div>
+        <div class="h-card dark"><div class="hc-label w">今朝の起床</div><div class="hc-val w">06:02</div><div class="hc-sub w">昨日より8分早い</div></div>
+      </div>
+      <div id="winTag" class="win-tag open"><div class="win-dot open" id="winDot"></div><span id="winText">確認中...</span><span id="winCd" style="margin-left:3px;"></span></div>
+    </div>
+    <div class="stories">
+      <div class="story"><div class="s-ring you">🌸</div><div class="s-days">14日</div><div class="s-name">あなた</div></div>
+      <div class="story"><div class="s-ring">🏃</div><div class="s-days">21日</div><div class="s-name">みか</div></div>
+      <div class="story"><div class="s-ring">⚡</div><div class="s-days" style="background:var(--ink);">9日</div><div class="s-name">ゆうき</div></div>
+      <div class="story"><div class="s-ring">📖</div><div class="s-days" style="background:#0A7A40;">5日</div><div class="s-name">けんじ</div></div>
+      <div class="story"><div class="s-ring">🧘</div><div class="s-days" style="background:#4F46E5;">7日</div><div class="s-name">さき</div></div>
+      <div class="story"><div class="s-ring" style="font-size:12px;color:var(--ink3);background:var(--bg);">＋</div><div class="s-name">追加</div></div>
+    </div>
+    <div class="nav">
+      <div class="tab on" onclick="sw('feed',this)">タイムライン</div>
+      <div class="tab" onclick="sw('map',this)">スポット</div>
+      <div class="tab" onclick="sw('tips',this)">TIPS</div>
+      <div class="tab" onclick="sw('comm',this)">コミュニティ</div>
+      <div class="tab" onclick="sw('log',this)">マイログ</div>
+      <div class="tab" onclick="sw('me',this)">マイページ</div>
+    </div>
+    <div class="scroll-area">
+      <div id="t-feed">
+        <div class="feed">
+          <div class="time-banner"><div class="tb-icon" id="tbIco">⏰</div><div><div class="tb-text" id="tbText">確認中...</div><div class="tb-sub">毎朝 5:00〜9:00 AM のみ投稿可</div></div><div class="tb-cd" id="tbCd"></div></div>
+          <div class="compose">
+            <div class="compose-top"><div class="c-av">🌸</div><textarea class="c-ta" id="cta" placeholder="今朝の朝活をシェアしよう..." rows="2"></textarea></div>
+            <div class="chips">
+              <span class="chip" onclick="toggleChip(this,'🏃 ランニング')">🏃 ランニング</span>
+              <span class="chip" onclick="toggleChip(this,'🧘 ヨガ')">🧘 ヨガ</span>
+              <span class="chip" onclick="toggleChip(this,'📚 読書')">📚 読書</span>
+              <span class="chip" onclick="toggleChip(this,'☕ カフェ')">☕ カフェ</span>
+              <span class="chip" onclick="toggleChip(this,'💪 筋トレ')">💪 筋トレ</span>
+            </div>
+            <div class="c-row"><button class="c-mini">📍 スポット</button><button class="c-mini">📷 写真</button><button class="c-submit" onclick="doPost()">投稿する</button></div>
+          </div>
+          <div class="filter-row">
+            <span class="fr-chip on" onclick="filterAll(this)">すべて</span>
+            <span class="fr-chip" onclick="filterTag('ランニング',this)">🏃 ラン</span>
+            <span class="fr-chip" onclick="filterTag('ヨガ',this)">🧘 ヨガ</span>
+            <span class="fr-chip" onclick="filterTag('読書',this)">📚 読書</span>
+            <span class="fr-chip" onclick="filterTag('筋トレ',this)">💪 筋トレ</span>
+          </div>
+          <div id="dynposts"></div>
+          <div class="post" data-tag="ランニング"><div class="p-h"><div class="p-av">🏃</div><div><div class="p-name">みか</div><div class="p-time">05:28 · 21日連続</div></div><div class="p-badge">21日 🔥</div></div><div class="p-body">皇居5km完走！朝の澄んだ空気の中、徐々にペースが上がってきた✨</div><div class="p-tags"><span class="ptag">🏃 ランニング</span><span class="ptag dark">📍 皇居外苑</span></div><div class="p-actions"><button class="p-act" onclick="like(this)">♡ <span>32</span></button><button class="p-act">💬 <span>4</span></button><button class="p-act">🔖</button><button class="p-act">↗</button></div></div>
+          <div class="post" data-tag="ヨガ"><div class="p-h"><div class="p-av">🧘</div><div><div class="p-name">さき</div><div class="p-time">05:10 · 7日連続</div></div><div class="p-badge">7日</div></div><div class="p-body">代々木公園で太陽礼拝20分。朝の光の中でやるヨガは別格🌿</div><div class="p-tags"><span class="ptag">🧘 ヨガ</span><span class="ptag dark">📍 代々木</span></div><div class="p-actions"><button class="p-act liked" onclick="like(this)">♥ <span>47</span></button><button class="p-act">💬 <span>6</span></button><button class="p-act">🔖</button><button class="p-act">↗</button></div></div>
+          <div class="post" data-tag="読書"><div class="p-h"><div class="p-av">📖</div><div><div class="p-name">けんじ</div><div class="p-time">06:05 · 5日連続</div></div><div class="p-badge">5日</div></div><div class="p-body">蔦屋書店モーニング読書。40P読了。やっぱり朝が一番頭に入る。</div><div class="p-tags"><span class="ptag">📚 読書</span><span class="ptag dark">📍 代官山</span></div><div class="p-actions"><button class="p-act" onclick="like(this)">♡ <span>19</span></button><button class="p-act">💬 <span>2</span></button><button class="p-act">🔖</button><button class="p-act">↗</button></div></div>
+          <div style="height:8px;"></div>
+        </div>
+      </div>
+      <div id="t-map" style="display:none"><div class="map-wrap">
+        <div class="s-title">朝活スポットマップ</div>
+        <div class="map-frame"><svg class="map-svg" viewBox="0 0 375 150" preserveAspectRatio="none"><defs><pattern id="g" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#00C2E0" stroke-width=".6"/></pattern></defs><rect width="375" height="150" fill="url(#g)"/><ellipse cx="187" cy="75" rx="120" ry="48" fill="rgba(0,194,224,0.06)" stroke="#00C2E0" stroke-width=".8"/></svg><div class="mpin" style="top:30%;left:43%;">📍</div><div class="mpin" style="top:17%;left:27%;">📍</div><div class="mpin" style="top:50%;left:57%;">📍</div><div class="mpin" style="top:62%;left:21%;">📍</div><div class="mpin" style="top:20%;left:62%;">📍</div><div class="map-label">📍 タップでスポット詳細</div></div>
+        <div class="place"><div class="pl-ico">🏃</div><div style="flex:1;"><div class="pl-name">皇居外苑ランコース</div><div class="pl-desc">5km · 5:00〜 · トイレあり</div></div><div class="pl-r"><div class="pl-stars">★ 4.9</div><div class="pl-crowd crowd-ok">● 空いてる</div></div></div>
+        <div class="place"><div class="pl-ico">🧘</div><div style="flex:1;"><div class="pl-name">代々木公園 芝生エリア</div><div class="pl-desc">広々 · ヨガ可 · 24h</div></div><div class="pl-r"><div class="pl-stars">★ 4.8</div><div class="pl-crowd crowd-ok">● ゆったり</div></div></div>
+        <div class="place"><div class="pl-ico">☕</div><div style="flex:1;"><div class="pl-name">蔦屋書店 代官山</div><div class="pl-desc">7:00〜 · Wi-Fi · 電源あり</div></div><div class="pl-r"><div class="pl-stars">★ 4.7</div><div class="pl-crowd crowd-mid">● やや混雑</div></div></div>
+        <div class="place"><div class="pl-ico">🌅</div><div style="flex:1;"><div class="pl-name">お台場海浜公園</div><div class="pl-desc">日の出スポット · 5:00〜</div></div><div class="pl-r"><div class="pl-stars">★ 4.6</div><div class="pl-crowd crowd-ok">● 空いてる</div></div></div>
+        <button class="add-pl">＋ スポットを追加する</button>
+        <div style="height:8px;"></div>
+      </div></div>
+      <div id="t-tips" style="display:none"><div class="tips-wrap">
+        <div class="tip"><div class="tip-tag">習慣化</div><div class="tip-title">前夜準備が成功の鍵</div><div class="tip-body">翌朝の服・荷物・水分を前夜にセット。シューズを玄関に置くだけで意志力ゼロで動ける仕組みができる。</div><div class="tip-foot"><span class="tip-by">by みか · 21日連続</span><span class="tip-save">🔖 234件</span></div></div>
+        <div class="tip" style="border-left-color:#0EA5E9;"><div class="tip-tag">覚醒</div><div class="tip-title">起きたら即・光を浴びる</div><div class="tip-body">カーテンを開けて自然光で体内時計をリセット。14〜16時間後に自然な眠気が来るサイクルに整う。</div><div class="tip-foot"><span class="tip-by">by ゆうき · 9日連続</span><span class="tip-save">🔖 189件</span></div></div>
+        <div class="tip" style="border-left-color:#0A7A40;"><div class="tip-tag">集中</div><div class="tip-title">起床後1時間スマホ封印</div><div class="tip-body">朝の前頭前野は最もクリアな状態。SNSで浪費せず、タスク・読書・運動に使う。</div><div class="tip-foot"><span class="tip-by">by けんじ · 5日連続</span><span class="tip-save">🔖 312件</span></div></div>
+        <div style="height:8px;"></div>
+      </div></div>
+      <div id="t-comm" style="display:none"><div class="comm-wrap">
+        <div class="s-title">チャレンジ</div>
+        <div class="ch-card"><div class="ch-h"><div class="ch-ico a">🏃</div><div><div class="ch-title">1ヶ月ランニングチャレンジ</div><div class="ch-sub">毎朝5km × 30日 · 残り16日</div></div><button class="ch-join in" onclick="joinCh(this)">参加中</button></div><div class="pbar"><div class="pfill" style="width:47%"></div></div><div class="ch-stats"><span class="ch-st">達成率 <b>47%</b></span><span class="ch-st">参加者 <b>128人</b></span></div></div>
+        <div class="ch-card"><div class="ch-h"><div class="ch-ico b">🧘</div><div><div class="ch-title">朝ヨガ21日チャレンジ</div><div class="ch-sub">毎朝10分 · 残り14日</div></div><button class="ch-join" onclick="joinCh(this)">参加する</button></div><div class="pbar"><div class="pfill" style="width:33%;background:#0EA5E9"></div></div><div class="ch-stats"><span class="ch-st">参加者 <b>74人</b></span><span class="ch-st">完走率 <b>68%</b></span></div></div>
+        <div class="ch-card"><div class="ch-h"><div class="ch-ico c">📚</div><div><div class="ch-title">朝読書30分 × 2週間</div><div class="ch-sub">限定バッジ獲得</div></div><button class="ch-join" onclick="joinCh(this)">参加する</button></div><div class="pbar"><div class="pfill" style="width:0%"></div></div><div class="ch-stats"><span class="ch-st">参加者 <b>52人</b></span><span class="ch-st">完走率 <b>71%</b></span></div></div>
+        <div class="s-title">ストリークランキング</div>
+        <div class="lb">
+          <div class="lb-row"><div class="lb-n">1</div><div class="lb-av">🏃</div><div class="lb-name">みか</div><div class="lb-streak">21日 🔥</div></div>
+          <div class="lb-row me"><div class="lb-n">2</div><div class="lb-av">🌸</div><div class="lb-name">はるか（あなた）</div><div class="lb-streak">14日</div></div>
+          <div class="lb-row"><div class="lb-n">3</div><div class="lb-av">⚡</div><div class="lb-name">ゆうき</div><div class="lb-streak">9日</div></div>
+          <div class="lb-row"><div class="lb-n">4</div><div class="lb-av">🧘</div><div class="lb-name">さき</div><div class="lb-streak">7日</div></div>
+          <div class="lb-row"><div class="lb-n">5</div><div class="lb-av">📖</div><div class="lb-name">けんじ</div><div class="lb-streak">5日</div></div>
+        </div>
+        <div style="height:8px;"></div>
+      </div></div>
+      <div id="t-log" style="display:none"><div class="mylog-wrap">
+        <div class="grid3"><div class="sc"><div class="sc-num">14</div><div class="sc-label">連続<br>ストリーク</div></div><div class="sc"><div class="sc-num">06:02</div><div class="sc-label">平均<br>起床</div></div><div class="sc"><div class="sc-num">38</div><div class="sc-label">今月の<br>投稿</div></div></div>
+        <div class="week-card"><div class="s-title" style="margin:0;">今週の朝活</div><div class="week-bars"><div class="wcol"><div class="wbar done" style="height:60px;"></div><div class="wday">月</div></div><div class="wcol"><div class="wbar done" style="height:46px;"></div><div class="wday">火</div></div><div class="wcol"><div class="wbar done" style="height:54px;"></div><div class="wday">水</div></div><div class="wcol"><div class="wbar done" style="height:40px;"></div><div class="wday">木</div></div><div class="wcol"><div class="wbar today" style="height:32px;"></div><div class="wday">金</div></div><div class="wcol"><div class="wbar" style="height:12px;"></div><div class="wday">土</div></div><div class="wcol"><div class="wbar" style="height:12px;"></div><div class="wday">日</div></div></div></div>
+        <div class="summary-card"><div class="sm-label">週次レポート · 4/7〜4/13</div><div class="sm-main">朝活5回 · 平均起床 05:58</div><div class="sm-rows"><div class="sm-row"><span class="sm-k">最多</span><span class="sm-v">🏃 ランニング ×3</span></div><div class="sm-divider"></div><div class="sm-row"><span class="sm-k">いいね</span><span class="sm-v">+147</span></div><div class="sm-row"><span class="sm-k">ランキング</span><span class="sm-v">2位 / 5人</span></div></div></div>
+        <div style="height:8px;"></div>
+      </div></div>
+      <div id="t-me" style="display:none"><div class="mypage">
+        <div class="mp-hero">
+          <div class="mp-avatar-row"><div class="mp-avatar">🌸</div><div style="flex:1;"><div class="mp-name">はるか</div><div class="mp-handle">@haruka_asa · 朝活歴3ヶ月</div></div><button class="mp-edit">編集</button></div>
+          <div class="mp-bio">毎朝5時起き目標。ランニングと読書が好き。朝の静けさが一番好きな時間 ☀️</div>
+          <div class="mp-badges"><span class="badge dark">🔥 14日連続</span><span class="badge">🏃 ランナー</span><span class="badge">📚 読書家</span><span class="badge">🌅 早起き鳥</span></div>
+          <div class="mp-stats-row">
+            <div class="mp-stat"><div class="mp-stat-num">38</div><div class="mp-stat-label">投稿</div></div>
+            <div class="mp-stat"><div class="mp-stat-num">23</div><div class="mp-stat-label">フォロー</div></div>
+            <div class="mp-stat"><div class="mp-stat-num">41</div><div class="mp-stat-label">フォロワー</div></div>
+            <div class="mp-stat"><div class="mp-stat-num">147</div><div class="mp-stat-label">いいね</div></div>
+          </div>
+        </div>
+        <div class="mp-section">
+          <div class="mp-section-title">今月のストリーク <span class="mp-section-more">詳細 →</span></div>
+          <div class="cal-labels"><span class="cal-lbl">月</span><span class="cal-lbl">火</span><span class="cal-lbl">水</span><span class="cal-lbl">木</span><span class="cal-lbl">金</span><span class="cal-lbl">土</span><span class="cal-lbl">日</span></div>
+          <div class="streak-cal" id="streakCal"></div>
+        </div>
+        <div class="mp-section" style="border-top:1px solid var(--border);padding-top:12px;">
+          <div class="mp-section-title">最近の朝活 <span class="mp-section-more">すべて →</span></div>
+          <div class="activity-list">
+            <div class="act-row"><div class="act-ico">🏃</div><div><div class="act-title">皇居ランニング 5km</div><div class="act-time">今日 05:28</div></div><div class="act-right"><div class="act-likes">♡ 32</div><div class="act-badge">ランニング</div></div></div>
+            <div class="act-row"><div class="act-ico">📚</div><div><div class="act-title">代官山で朝読書 40P</div><div class="act-time">昨日 06:15</div></div><div class="act-right"><div class="act-likes">♡ 18</div><div class="act-badge">読書</div></div></div>
+            <div class="act-row"><div class="act-ico">🏃</div><div><div class="act-title">代々木公園ラン 3km</div><div class="act-time">4/13 05:50</div></div><div class="act-right"><div class="act-likes">♡ 24</div><div class="act-badge">ランニング</div></div></div>
+          </div>
+        </div>
+        <div class="mp-section" style="border-top:1px solid var(--border);padding-top:12px;">
+          <div class="mp-section-title">バッジ</div>
+          <div class="mp-achievements">
+            <div class="ach"><div class="ach-ico">🌅</div><div class="ach-label">早起き鳥</div></div>
+            <div class="ach"><div class="ach-ico">🔥</div><div class="ach-label">14日連続</div></div>
+            <div class="ach"><div class="ach-ico">🏃</div><div class="ach-label">ランナー</div></div>
+            <div class="ach"><div class="ach-ico">📚</div><div class="ach-label">読書家</div></div>
+            <div class="ach locked"><div class="ach-ico">🌙</div><div class="ach-label">30日連続</div></div>
+            <div class="ach locked"><div class="ach-ico">⚡</div><div class="ach-label">早起き王</div></div>
+            <div class="ach locked"><div class="ach-ico">🏆</div><div class="ach-label">ランク1位</div></div>
+            <div class="ach locked"><div class="ach-ico">✨</div><div class="ach-label">100投稿</div></div>
+          </div>
+        </div>
+        <div class="mp-section" style="border-top:1px solid var(--border);padding-top:12px;">
+          <div class="mp-section-title">設定</div>
+          <div class="mp-settings">
+            <div class="setting-row"><span class="set-icon">🔔</span><span class="set-label">朝活リマインダー</span><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+            <div class="setting-row"><span class="set-icon">⏰</span><span class="set-label">目標起床時刻</span><span class="set-val">5:00 AM</span><span class="set-arrow">›</span></div>
+            <div class="setting-row"><span class="set-icon">🔒</span><span class="set-label">投稿の公開範囲</span><span class="set-val">全体</span><span class="set-arrow">›</span></div>
+            <div class="setting-row"><span class="set-icon">📍</span><span class="set-label">位置情報</span><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+            <div class="setting-row" style="color:#E24B4A;"><span class="set-icon">🚪</span><span class="set-label" style="color:#E24B4A;">ログアウト</span><span class="set-arrow" style="color:#E24B4A;">›</span></div>
+          </div>
+        </div>
+        <div style="height:16px;"></div>
+      </div></div>
+    </div>
+    <div class="bnav">
+      <button class="bbt on" onclick="swB('feed',this)"><span class="b-ico">🏠</span><span class="b-lbl">ホーム</span></button>
+      <button class="bbt" onclick="swB('map',this)"><span class="b-ico">🗺️</span><span class="b-lbl">スポット</span></button>
+      <button class="fab" onclick="focusCompose()">＋</button>
+      <button class="bbt" onclick="swB('comm',this)"><span class="b-ico">🏆</span><span class="b-lbl">コミュニティ</span></button>
+      <button class="bbt" onclick="swB('me',this)"><span class="b-ico">👤</span><span class="b-lbl">マイページ</span></button>
+    </div>
+  </div>
+</div>
+<script>
+var selChips=[];
+function updateClock(){
+  var n=new Date(),h=String(n.getHours()).padStart(2,'0'),mi=String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('htime').textContent=h+':'+mi;
+  document.getElementById('sbTime').textContent=h+':'+mi;
+  var hour=n.getHours(),min=n.getMinutes(),open=(hour>=5&&hour<9);
+  var wt=document.getElementById('winTag'),wd=document.getElementById('winDot'),wtext=document.getElementById('winText'),wcd=document.getElementById('winCd');
+  var tbIco=document.getElementById('tbIco'),tbText=document.getElementById('tbText'),tbCd=document.getElementById('tbCd');
+  if(open){
+    wt.className='win-tag open';wd.className='win-dot open';
+    wtext.textContent='投稿ウィンドウ オープン中';
+    var rem=(9*60)-(hour*60+min);
+    wcd.textContent='残'+Math.floor(rem/60)+'h'+String(rem%60).padStart(2,'0')+'m';
+    tbIco.textContent='✅';tbText.textContent='投稿できます — 朝活タイムライン';tbCd.textContent='残'+Math.floor(rem/60)+'h'+String(rem%60).padStart(2,'0')+'m';
+  } else {
+    wt.className='win-tag closed';wd.className='win-dot closed';
+    wtext.textContent='9時〜翌5時は閲覧のみ';
+    var now2=hour*60+min,next=5*60,rem2=now2<next?(next-now2):(24*60-now2+next);
+    wcd.textContent='あと'+Math.floor(rem2/60)+'h'+String(rem2%60).padStart(2,'0')+'m';
+    tbIco.textContent='🔒';tbText.textContent='次のウィンドウ：明朝 5:00 AM';tbCd.textContent='あと'+Math.floor(rem2/60)+'h'+String(rem2%60).padStart(2,'0')+'m';
+  }
+}
+function buildCal(){
+  var cal=document.getElementById('streakCal');if(!cal)return;
+  var done=[1,2,3,5,6,7,8,9,10,12,13,14,15];var today=15;var html='';
+  for(var i=1;i<=30;i++){var cls='cal-day';if(i===today)cls+=' today';else if(done.indexOf(i)>=0)cls+=' done';html+='<div class="'+cls+'">'+(i<=today?i:'')+'</div>';}
+  cal.innerHTML=html;
+}
+function sw(name,el){
+  ['feed','map','tips','comm','log','me'].forEach(function(t){var e=document.getElementById('t-'+t);if(e)e.style.display=t===name?'':'none';});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});el.classList.add('on');
+  document.querySelector('.scroll-area').scrollTop=0;
+  if(name==='me')buildCal();
+}
+function swB(name,el){
+  var tabs=document.querySelectorAll('.tab');
+  var idx=['feed','map','tips','comm','log','me'].indexOf(name);
+  if(idx>=0)sw(name,tabs[idx]);
+  document.querySelectorAll('.bbt').forEach(function(b){b.classList.remove('on');});el.classList.add('on');
+}
+function like(btn){
+  btn.classList.toggle('liked');
+  var m=btn.innerHTML.match(/([♡♥])\s*<span>(\d+)<\/span>/);if(!m)return;
+  var cnt=parseInt(m[2]);
+  if(btn.classList.contains('liked'))btn.innerHTML='♥ <span>'+(cnt+1)+'</span>';
+  else btn.innerHTML='♡ <span>'+(cnt-1)+'</span>';
+}
+function toggleChip(el,tag){
+  el.classList.toggle('sel');var i=selChips.indexOf(tag);
+  if(i===-1)selChips.push(tag);else selChips.splice(i,1);
+  var ta=document.getElementById('cta');var base=ta.value.replace(/#\S+/g,'').trim();
+  ta.value=base+(selChips.length?' '+selChips.map(function(c){return '#'+c.replace(/\s/,'');}).join(' '):'');
+}
+function doPost(){
+  var ta=document.getElementById('cta');var text=ta.value.trim();if(!text)return;
+  var post=document.createElement('div');post.className='post';
+  var n=new Date();var t=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  var tags=selChips.map(function(c){return '<span class="ptag">'+c+'</span>';}).join('');
+  post.setAttribute('data-tag',selChips[0]||'');
+  post.innerHTML='<div class="p-h"><div class="p-av" style="background:var(--ink);color:#fff;">🌸</div><div><div class="p-name">はるか</div><div class="p-time">'+t+' · たった今</div></div><div class="p-badge">14日</div></div><div class="p-body">'+text.replace(/</g,'&lt;')+'</div>'+(tags?'<div class="p-tags">'+tags+'</div>':'')+'<div class="p-actions"><button class="p-act" onclick="like(this)">♡ <span>0</span></button><button class="p-act">💬 <span>0</span></button><button class="p-act">🔖</button><button class="p-act">↗</button></div>';
+  document.getElementById('dynposts').prepend(post);
+  ta.value='';selChips=[];document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('sel');});
+}
+function filterAll(el){
+  document.querySelectorAll('.post[data-tag]').forEach(function(p){p.style.display='';});
+  document.querySelectorAll('.fr-chip').forEach(function(c){c.classList.remove('on');});el.classList.add('on');
+}
+function filterTag(tag,el){
+  document.querySelectorAll('.post[data-tag]').forEach(function(p){p.style.display=p.dataset.tag===tag?'':'none';});
+  document.querySelectorAll('.fr-chip').forEach(function(c){c.classList.remove('on');});el.classList.add('on');
+}
+function focusCompose(){swB('feed',document.querySelectorAll('.bbt')[0]);document.getElementById('cta').focus();}
+function joinCh(btn){btn.classList.toggle('in');btn.textContent=btn.classList.contains('in')?'参加中':'参加する';}
+updateClock();setInterval(updateClock,30000);
+</script>
+</body>
+</html>
